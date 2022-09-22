@@ -53,7 +53,7 @@ public class JwtVerifierTests
         var cancellationToken = new CancellationToken();
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
-        var signatureBytes = Encoding.UTF8.GetBytes(Base64Convert.Decode(signatureData));
+        var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
         
         var key = new Mock<ISigningKey>();
         key.Setup(x => x.VerifyAsync(dataBytes, signatureBytes, cancellationToken))
@@ -83,7 +83,7 @@ public class JwtVerifierTests
         var cancellationToken = new CancellationToken();
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
-        var signatureBytes = Encoding.UTF8.GetBytes(Base64Convert.Decode(signatureData));
+        var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
         
         var key = new Mock<ISigningKey>();
         key.Setup(x => x.VerifyAsync(dataBytes, signatureBytes, cancellationToken))
@@ -119,7 +119,7 @@ public class JwtVerifierTests
         var cancellationToken = new CancellationToken();
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
-        var signatureBytes = Encoding.UTF8.GetBytes(Base64Convert.Decode(signatureData));
+        var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
         
         var key = new Mock<ISigningKey>();
         key.Setup(x => x.VerifyAsync(dataBytes, signatureBytes, cancellationToken))
