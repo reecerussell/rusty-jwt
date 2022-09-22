@@ -1,4 +1,4 @@
-![Actions](https://github.com/reecerussell/rusty-jwt/actions/workflows/publish.yaml/badge.svg)
+![Actions](https://github.com/reecerussell/rusty-jwt/actions/workflows/package.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/reecerussell/rusty-jwt/branch/master/graph/badge.svg?token=2o5osNgjr8)](https://codecov.io/gh/reecerussell/rusty-jwt)
 [![CodeFactor](https://www.codefactor.io/repository/github/reecerussell/rusty-jwt/badge)](https://www.codefactor.io/repository/github/reecerussell/rusty-jwt)
 [![Nuget](https://img.shields.io/nuget/v/Rusty.Jwt)](https://www.nuget.org/packages/Rusty.Jwt/)
