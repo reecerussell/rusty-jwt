@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Title>Rusty Jwt</Title>
+        <Description>A simple package use to create and verify JSON-Web-Tokens, built on the concept of Signing Keys.</Description>
+        <PackageProjectUrl>https://github.com/reecerussell/rusty-jwt</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/reecerussell/rusty-jwt.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>jwt</PackageTags>
+        <PackageLicenseUrl>https://github.com/reecerussell/rusty-jwt/blob/master/LICENSE</PackageLicenseUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Base64Extensions" Version="0.5.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Rusty.Jwt.Abstractions\Rusty.Jwt.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>
