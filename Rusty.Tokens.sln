@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rusty.Jwt", "Rusty.Jwt\Rusty.Jwt.csproj", "{486E8A22-A296-43E5-BE7E-58C5F70095F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rusty.Jwt.Tests", "Rusty.Jwt.Tests\Rusty.Jwt.Tests.csproj", "{5708B361-59D3-4654-832D-60B19C276F47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rusty.Jwt.Abstractions", "Rusty.Jwt.Abstractions\Rusty.Jwt.Abstractions.csproj", "{4DDA2483-777C-42A3-AE24-AC90DA830851}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{486E8A22-A296-43E5-BE7E-58C5F70095F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{486E8A22-A296-43E5-BE7E-58C5F70095F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{486E8A22-A296-43E5-BE7E-58C5F70095F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{486E8A22-A296-43E5-BE7E-58C5F70095F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5708B361-59D3-4654-832D-60B19C276F47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5708B361-59D3-4654-832D-60B19C276F47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5708B361-59D3-4654-832D-60B19C276F47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5708B361-59D3-4654-832D-60B19C276F47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DDA2483-777C-42A3-AE24-AC90DA830851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DDA2483-777C-42A3-AE24-AC90DA830851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DDA2483-777C-42A3-AE24-AC90DA830851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DDA2483-777C-42A3-AE24-AC90DA830851}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
