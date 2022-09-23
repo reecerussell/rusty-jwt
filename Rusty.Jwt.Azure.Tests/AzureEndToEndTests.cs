@@ -22,7 +22,6 @@ public class AzureEndToEndTests : IAsyncLifetime
         serviceCollection.AddRustyJwt()
             .AddAzureKey("https://rusty-jwt.vault.azure.net/", "rsa",
                 credentials: Credentials.Default);
-            
 
         var services = serviceCollection.BuildServiceProvider();
 
