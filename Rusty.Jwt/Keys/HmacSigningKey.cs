@@ -45,7 +45,7 @@ public class HmacSigningKey : ISigningKey
     {
         using var hmac = Create();
         await using var ms = new MemoryStream(data);
-        return await hmac.ComputeHashAsync(ms, cancellationToken);
+        return hmac.ComputeHash(ms);
     }
 
     public async Task<bool> VerifyAsync(byte[] data, byte[] signature, CancellationToken cancellationToken = default)
