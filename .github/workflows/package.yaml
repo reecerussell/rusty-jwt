@@ -23,9 +23,12 @@ jobs:
       - name: Build
         run: |
           dotnet restore Rusty.Jwt/Rusty.Jwt.csproj
+          dotnet restore Rusty.Jwt.Azure/Rusty.Jwt.Azure.csproj
           dotnet build -c Release --no-restore Rusty.Jwt/Rusty.Jwt.csproj
+          dotnet build -c Release --no-restore Rusty.Jwt.Azure/Rusty.Jwt.Azure.csproj
           dotnet pack -c Release --no-build -o packages Rusty.Jwt/Rusty.Jwt.csproj
           dotnet pack -c Release --no-build -o packages Rusty.Jwt.Abstractions/Rusty.Jwt.Abstractions.csproj
+          dotnet pack -c Release --no-build -o packages Rusty.Jwt.Azure/Rusty.Jwt.Azure.csproj
 
       - name: Upload Artifacts
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -49,18 +52,26 @@ jobs:
 
       - name: Test
         run: |
-          dotnet restore Rusty.Jwt.Tests/Rusty.Jwt.Tests.csproj
           dotnet test -c Release \
             -p:CollectCoverage=true \
             -p:CoverletOutputFormat=cobertura \
             -p:CoverletOutput=./Coverage/Rusty.Jwt.Tests/ \
             Rusty.Jwt.Tests/Rusty.Jwt.Tests.csproj
+          dotnet test -c Release \
+            -p:CollectCoverage=true \
+            -p:CoverletOutputFormat=cobertura \
+            -p:CoverletOutput=./Coverage/Rusty.Jwt.Azure.Tests/ \
+            Rusty.Jwt.Azure.Tests/Rusty.Jwt.Azure.Tests.csproj
+        env:
+          AZURE_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
+          AZURE_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
+          AZURE_CLIENT_SECRET: ${{secrets.AZURE_CLIENT_SECRET}}
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
           files: >
-            ./Coverage/Rusty.Jwt.Tests/coverage.cobertura.xml
+            ./Coverage/Rusty.Jwt.Tests/coverage.cobertura.xml,./Coverage/Rusty.Jwt.Azure.Tests/coverage.cobertura.xml
 
   publish:
     name: Publish
@@ -84,3 +95,6 @@ jobs:
 
       - name: Publish Rusty.Jwt.Abstractions
         run: dotnet nuget push packages/Rusty.Jwt.Abstractions.*.*.*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://www.nuget.org/api/v2/package --skip-duplicate
+
+      - name: Publish Rusty.Jwt.Azure
+        run: dotnet nuget push packages/Rusty.Jwt.Azure.*.*.*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://www.nuget.org/api/v2/package --skip-duplicate
