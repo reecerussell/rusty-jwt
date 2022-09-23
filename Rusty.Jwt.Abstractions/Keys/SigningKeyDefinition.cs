@@ -1,6 +1,6 @@
 namespace Rusty.Jwt.Keys;
 
-internal class SigningKeyDefinition : ISigningKeyDefinition
+public class SigningKeyDefinition : ISigningKeyDefinition
 {
     public string? Name { get; set; }
     public ISigningKey Key { get; set; }
