@@ -12,6 +12,7 @@
         <PackageTags>jwt</PackageTags>
         <PackageLicenseUrl>https://github.com/reecerussell/rusty-jwt/blob/master/LICENSE</PackageLicenseUrl>
         <LangVersion>10</LangVersion>
+        <PackageVersion>1.0.1</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
