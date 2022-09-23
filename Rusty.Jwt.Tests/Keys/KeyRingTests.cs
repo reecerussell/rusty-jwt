@@ -83,6 +83,7 @@ public class KeyRingTests
     [Fact]
     public void GetVerificationKey_WhereKeyRingHasKeys_ReturnsAggregateKey()
     {
+        // Matching HashAlgorithm, Matching SigningAlgorithm
         var key1 = new Mock<ISigningKey>();
         key1.Setup(x => x.Algorithm).Returns(SigningKeyAlgorithm.Hmac);
         key1.Setup(x => x.HashAlgorithm).Returns(HashAlgorithm.SHA256);
@@ -91,6 +92,7 @@ public class KeyRingTests
         keyDefinition1.SetupGet(x => x.Mode).Returns(SigningKeyMode.SignAndVerify);
         keyDefinition1.SetupGet(x => x.Key).Returns(key1.Object);
         
+        // Matching HashAlgorithm, Mismatching SigningAlgorithm
         var key2 = new Mock<ISigningKey>();
         key2.Setup(x => x.Algorithm).Returns(SigningKeyAlgorithm.Rsa);
         key2.Setup(x => x.HashAlgorithm).Returns(HashAlgorithm.SHA256);
@@ -99,6 +101,7 @@ public class KeyRingTests
         keyDefinition2.SetupGet(x => x.Mode).Returns(SigningKeyMode.SignAndVerify);
         keyDefinition2.SetupGet(x => x.Key).Returns(key2.Object);
         
+        // Mismatching HashAlgorithm, Mismatching SigningAlgorithm
         var key3 = new Mock<ISigningKey>();
         key3.Setup(x => x.Algorithm).Returns(SigningKeyAlgorithm.Rsa);
         key3.Setup(x => x.HashAlgorithm).Returns(HashAlgorithm.SHA384);
@@ -106,10 +109,22 @@ public class KeyRingTests
         var keyDefinition3 = new Mock<ISigningKeyDefinition>();
         keyDefinition3.SetupGet(x => x.Mode).Returns(SigningKeyMode.SignAndVerify);
         keyDefinition3.SetupGet(x => x.Key).Returns(key3.Object);
+        
+        // Matching HashAlgorithm, Matching SigningAlgorithm, Has a name
+        var key4 = new Mock<ISigningKey>();
+        key4.Setup(x => x.Algorithm).Returns(SigningKeyAlgorithm.Hmac);
+        key4.Setup(x => x.HashAlgorithm).Returns(HashAlgorithm.SHA256);
+
+        var keyDefinition4 = new Mock<ISigningKeyDefinition>();
+        keyDefinition4.SetupGet(x => x.Mode).Returns(SigningKeyMode.SignAndVerify);
+        keyDefinition4.SetupGet(x => x.Key).Returns(key4.Object);
+        keyDefinition4.SetupGet(x => x.Name).Returns("test-key"); // cause to ignore
 
         var services = new ServiceCollection();
         services.AddTransient(_ => keyDefinition1.Object);
         services.AddTransient(_ => keyDefinition2.Object);
+        services.AddTransient(_ => keyDefinition3.Object);
+        services.AddTransient(_ => keyDefinition4.Object);
 
         var keyRing = new KeyRing(services.BuildServiceProvider());
         var key = keyRing.GetVerificationKey(SigningKeyAlgorithm.Hmac, HashAlgorithm.SHA256);

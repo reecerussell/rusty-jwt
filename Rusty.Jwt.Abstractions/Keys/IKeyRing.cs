@@ -15,7 +15,9 @@ public interface IKeyRing
     ISigningKey GetSigningKey(string name);
 
     /// <summary>
-    /// Used to get a key to verify data and a signature.
+    /// Used to get a key to verify data and a signature. Only fetches keys without
+    /// a name, this is so that explicitly defined keys are only used for their
+    /// intended purpose.
     /// </summary>
     /// <param name="algorithm">The signing algorithm of key to get.</param>
     /// <param name="hashAlgorithm">The hashing algorithm of key to get.</param>
