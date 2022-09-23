@@ -36,7 +36,8 @@ internal class KeyRing : IKeyRing
     public IVerificationKey GetVerificationKey(SigningKeyAlgorithm algorithm, HashAlgorithm hashAlgorithm)
     {
         var keys = _keys.Where(x => x.Key.Algorithm == algorithm &&
-                                    x.Key.HashAlgorithm == hashAlgorithm)
+                                    x.Key.HashAlgorithm == hashAlgorithm &&
+                                    x.Name == null)
             .Select(x => x.Key);
         
         return new AggregateVerificationKey(keys);
