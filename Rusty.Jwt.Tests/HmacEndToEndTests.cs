@@ -19,7 +19,8 @@ public class HmacEndToEndTests : IAsyncLifetime
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddRustyJwt()
-            .AddHmacSigningKey("foo", HashAlgorithm.SHA256, "Key1", SigningKeyMode.SignAndVerify);
+            .AddHmacSigningKey("foo", HashAlgorithm.SHA256, "Key1", SigningKeyMode.SignAndVerify)
+            .UseInMemoryTokenCache();
 
         var services = serviceCollection.BuildServiceProvider();
 
