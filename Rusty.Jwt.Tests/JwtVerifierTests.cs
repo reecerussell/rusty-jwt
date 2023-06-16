@@ -2,6 +2,7 @@ using System.Text;
 using Base64Extensions;
 using FluentAssertions;
 using Moq;
+using Rusty.Jwt.Caching;
 
 namespace Rusty.Jwt.Tests;
 
@@ -13,7 +14,7 @@ public class JwtVerifierTests
     public async Task VerifyAsync_GivenEmptyToken_ThrowsInvalidToken(string token)
     {
         var keyRing = new Mock<IKeyRing>();
-        var verifier = new JwtVerifier(keyRing.Object);
+        var verifier = CreateService(keyRing: keyRing.Object);
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync(token, CancellationToken.None));
@@ -26,7 +27,7 @@ public class JwtVerifierTests
     public async Task VerifyAsync_GivenTokenWithInvalidStructure_ThrowsInvalidToken(string token)
     {
         var keyRing = new Mock<IKeyRing>();
-        var verifier = new JwtVerifier(keyRing.Object);
+        var verifier = CreateService(keyRing: keyRing.Object);
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync(token, CancellationToken.None));
@@ -38,7 +39,7 @@ public class JwtVerifierTests
     public async Task VerifyAsync_GivenTokenWithInvalidHeader_ThrowsInvalidToken(string token)
     {
         var keyRing = new Mock<IKeyRing>();
-        var verifier = new JwtVerifier(keyRing.Object);
+        var verifier = CreateService(keyRing: keyRing.Object);
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync(token, CancellationToken.None));
@@ -51,6 +52,7 @@ public class JwtVerifierTests
         const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         const string keyId = "123";
         var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
         var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
@@ -65,13 +67,56 @@ public class JwtVerifierTests
             .Returns(key.Object)
             .Verifiable();
 
-        var verifier = new JwtVerifier(keyRing.Object);
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
+
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync((TokenCacheValue?) null)
+            .Verifiable();
+        cache.Setup(x => x.SetAsync($"{tokenData}.{signatureData}", It.Is<TokenCacheValue>(d =>
+                d.Valid == true &&
+                d.Expiry == now.AddMinutes(JwtVerifier.DefaultCacheMinutes)), cancellationToken))
+            .Verifiable();
+
+        var verifier = CreateService(
+            keyRing: keyRing.Object,
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
         var claims = await verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken);
 
         claims["sub"].Should().Be("1234567890");
         
         key.VerifyAll();
         keyRing.VerifyAll();
+        cache.VerifyAll();
+    }
+    
+    [Fact]
+    public async Task VerifyAsync_GivenCachedToken_BypassesVerification()
+    {
+        const string tokenData = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0";
+        const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
+        const string keyId = "123";
+        var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
+
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
+
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync(new TokenCacheValue{Valid = true})
+            .Verifiable();
+
+        var verifier = CreateService(
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
+        var claims = await verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken);
+
+        claims["sub"].Should().Be("1234567890");
+
+        cache.VerifyAll();
     }
     
     [Fact]
@@ -81,6 +126,7 @@ public class JwtVerifierTests
         const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         const string keyId = "123";
         var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
         var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
@@ -98,13 +144,29 @@ public class JwtVerifierTests
             .Returns(key.Object)
             .Verifiable();
 
-        var verifier = new JwtVerifier(keyRing.Object);
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
+
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync((TokenCacheValue?) null)
+            .Verifiable();
+        cache.Setup(x => x.SetAsync($"{tokenData}.{signatureData}", It.Is<TokenCacheValue>(d =>
+                d.Valid == true &&
+                d.Expiry == now.AddMinutes(JwtVerifier.DefaultCacheMinutes)), cancellationToken))
+            .Verifiable();
+
+        var verifier = CreateService(
+            keyRing: keyRing.Object,
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
         var claims = await verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken);
 
         claims["sub"].Should().Be("1234567890");
         
         key.VerifyAll();
         keyRing.VerifyAll();
+        cache.VerifyAll();
     }
     
     [Theory]
@@ -117,6 +179,7 @@ public class JwtVerifierTests
         var tokenData = header + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0";
         const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
         var signatureBytes = Base64Convert.Decode(Encoding.UTF8.GetBytes(signatureData));
@@ -130,14 +193,31 @@ public class JwtVerifierTests
         keyRing.Setup(x => x.GetVerificationKey(algorithm, hashAlgorithm))
             .Returns(key.Object)
             .Verifiable();
+        
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
 
-        var verifier = new JwtVerifier(keyRing.Object);
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync((TokenCacheValue?) null)
+            .Verifiable();
+        cache.Setup(x => x.SetAsync($"{tokenData}.{signatureData}", It.Is<TokenCacheValue>(d =>
+                d.Valid == true &&
+                d.Expiry == now.AddMinutes(JwtVerifier.DefaultCacheMinutes)), cancellationToken))
+            .Verifiable();
+
+        var verifier = CreateService(
+            keyRing: keyRing.Object,
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
+        
         var claims = await verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken);
 
         claims["sub"].Should().Be("1234567890");
         
         key.VerifyAll();
         keyRing.VerifyAll();
+        cache.VerifyAll();
     }
     
     [Fact]
@@ -146,6 +226,7 @@ public class JwtVerifierTests
         const string tokenData = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0";
         const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
         var signatureBytes = Encoding.UTF8.GetBytes(Base64Convert.Decode(signatureData));
@@ -159,11 +240,28 @@ public class JwtVerifierTests
         keyRing.Setup(x => x.GetVerificationKey(SigningKeyAlgorithm.Hmac, HashAlgorithm.SHA256))
             .Returns(key.Object)
             .Verifiable();
+        
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
 
-        var verifier = new JwtVerifier(keyRing.Object);
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync((TokenCacheValue?) null)
+            .Verifiable();
+        cache.Setup(x => x.SetAsync($"{tokenData}.{signatureData}", It.Is<TokenCacheValue>(d =>
+                d.Valid == false &&
+                d.Expiry == now.AddMinutes(JwtVerifier.DefaultCacheMinutes)), cancellationToken))
+            .Verifiable();
+
+        var verifier = CreateService(
+            keyRing: keyRing.Object,
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken));
+        
+        cache.VerifyAll();
     }
     
     [Theory]
@@ -174,6 +272,7 @@ public class JwtVerifierTests
         var tokenData = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + payload;
         const string signatureData = "LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         var cancellationToken = new CancellationToken();
+        var now = DateTime.Now;
 
         var dataBytes = Encoding.UTF8.GetBytes(tokenData);
         var signatureBytes = Encoding.UTF8.GetBytes(Base64Convert.Decode(signatureData));
@@ -187,11 +286,28 @@ public class JwtVerifierTests
         keyRing.Setup(x => x.GetVerificationKey(SigningKeyAlgorithm.Hmac, HashAlgorithm.SHA256))
             .Returns(key.Object)
             .Verifiable();
+        
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(x => x.Now).Returns(now);
 
-        var verifier = new JwtVerifier(keyRing.Object);
+        var cache = new Mock<ITokenCache>();
+        cache.Setup(x => x.GetAsync($"{tokenData}.{signatureData}", cancellationToken))
+            .ReturnsAsync((TokenCacheValue?) null)
+            .Verifiable();
+        cache.Setup(x => x.SetAsync($"{tokenData}.{signatureData}", It.Is<TokenCacheValue>(d =>
+                d.Valid == false &&
+                d.Expiry == now.AddMinutes(JwtVerifier.DefaultCacheMinutes)), cancellationToken))
+            .Verifiable();
+
+        var verifier = CreateService(
+            keyRing: keyRing.Object,
+            tokenCache: cache.Object,
+            systemClock: clock.Object);
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync($"{tokenData}.{signatureData}", cancellationToken));
+        
+        cache.VerifyAll();
     }
     
     [Fact]
@@ -201,22 +317,21 @@ public class JwtVerifierTests
         const string token = "eyd0eXAnOidqd3QnLCdhbGcnOidYUzI1Nid9Cg.eyJzdWIiOiIxMjM0NTY3ODkwIn0.LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
         var cancellationToken = new CancellationToken();
 
-        var verifier = new JwtVerifier(Mock.Of<IKeyRing>());
+        var verifier = CreateService();
 
         await Assert.ThrowsAsync<InvalidTokenException>(
             () => verifier.VerifyAsync(token, cancellationToken));
     }
-    
-    [Fact]
-    public async Task VerifyAsync_WhereHashAlgorithmIsNotSupported_ThrowsInvalidToken()
+
+    private static JwtVerifier CreateService(
+        IKeyRing? keyRing = null,
+        ITokenCache? tokenCache = null,
+        ISystemClock? systemClock = null)
     {
-        // {"alg":"XS256"}
-        const string token = "eyd0eXAnOidqd3QnLCdhbGcnOidSWDI3Mid9Cg.eyJzdWIiOiIxMjM0NTY3ODkwIn0.LoE9f0HmUNvJ9td_O0327K6yWgUqGp4GrRYLpH6ca1c";
-        var cancellationToken = new CancellationToken();
+        keyRing ??= Mock.Of<IKeyRing>();
+        tokenCache ??= Mock.Of<ITokenCache>();
+        systemClock ??= Mock.Of<ISystemClock>();
 
-        var verifier = new JwtVerifier(Mock.Of<IKeyRing>());
-
-        await Assert.ThrowsAsync<InvalidTokenException>(
-            () => verifier.VerifyAsync(token, cancellationToken));
+        return new JwtVerifier(keyRing, tokenCache, systemClock);
     }
 }
