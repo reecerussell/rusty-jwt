@@ -13,7 +13,7 @@
         <RepositoryUrl>https://github.com/reecerussell/rusty-jwt.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>jwt</PackageTags>
-        <PackageVersion>1.0.2</PackageVersion>
+        <PackageVersion>1.1.0</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
