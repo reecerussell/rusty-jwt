@@ -1,4 +1,3 @@
-using Azure.Identity;
 using Base64Extensions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
