@@ -1,17 +1,29 @@
 using System.Text;
 using Base64Extensions;
 using Newtonsoft.Json;
+using Rusty.Jwt.Caching;
 using Rusty.Jwt.Keys;
 
 namespace Rusty.Jwt;
 
 public class JwtVerifier : IJwtVerifier
 {
+    /// <summary>
+    /// The default cache timing in minutes.
+    /// </summary>
+    public const int DefaultCacheMinutes = 5;
+    
     private readonly IKeyRing _keyRing;
+    private readonly ITokenCache _tokenCache;
+    private readonly ISystemClock _systemClock;
 
-    public JwtVerifier(IKeyRing keyRing)
+    public JwtVerifier(IKeyRing keyRing,
+        ITokenCache tokenCache,
+        ISystemClock systemClock)
     {
         _keyRing = keyRing;
+        _tokenCache = tokenCache;
+        _systemClock = systemClock;
     }
     
     public async Task<Claims> VerifyAsync(string token, CancellationToken cancellationToken = default)
@@ -30,6 +42,17 @@ public class JwtVerifier : IJwtVerifier
         var header = Deserialize<Header>(parts[0]);
         var (algorithm, hashAlgorithm) = ReadTokenAlgorithm(header.Algorithm!);
         
+        var cacheResult = await _tokenCache.GetAsync(token, cancellationToken);
+        if (cacheResult is { } result)
+        {
+            if (!result.Valid)
+            {
+                throw new InvalidTokenException("token is invalid");
+            }
+            
+            return Deserialize<Claims>(parts[1]);
+        }
+        
         IVerificationKey key;
         if (header.KeyId != null)
         {
@@ -46,10 +69,44 @@ public class JwtVerifier : IJwtVerifier
         var valid = await key.VerifyAsync(data, signature, cancellationToken);
         if (!valid)
         {
+            await CacheInvalidTokenAsync(token, cancellationToken);
+            
             throw new InvalidTokenException("token is invalid");
         }
+
+        try
+        {
+            var claims = Deserialize<Claims>(parts[1]);
+            await CacheValidTokenAsync(token, claims, cancellationToken);
+
+            return claims;
+        }
+        catch (InvalidTokenException)
+        {
+            await CacheInvalidTokenAsync(token, cancellationToken);
+
+            throw;
+        }
+    }
+
+    private Task CacheValidTokenAsync(string token, Claims claims, CancellationToken cancellationToken)
+    {
+        var expiry = claims.Expiry ?? _systemClock.Now.AddMinutes(DefaultCacheMinutes);
         
-        return Deserialize<Claims>(parts[1]);
+        return _tokenCache.SetAsync(token, new TokenCacheValue
+        {
+            Valid = true,
+            Expiry = expiry.DateTime
+        }, cancellationToken);
+    }
+
+    private Task CacheInvalidTokenAsync(string token, CancellationToken cancellationToken)
+    {
+        return _tokenCache.SetAsync(token, new TokenCacheValue
+        {
+            Valid = false,
+            Expiry = _systemClock.Now.AddMinutes(DefaultCacheMinutes)
+        }, cancellationToken);
     }
 
     private static T Deserialize<T>(string base64Json)

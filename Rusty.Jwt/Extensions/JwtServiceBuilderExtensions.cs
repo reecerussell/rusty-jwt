@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Rusty.Jwt.Caching;
 using Rusty.Jwt.Keys;
 
 namespace Rusty.Jwt;
@@ -72,6 +73,16 @@ public static class JwtServiceBuilderExtensions
                 Name = name
             };
         });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Used to configure the token caching functionality to use an in-memory cache.
+    /// </summary>
+    public static IJwtServiceBuilder UseInMemoryTokenCache(this IJwtServiceBuilder builder)
+    {
+        builder.Services.AddSingleton<ITokenCache, InMemoryTokenCache>();
 
         return builder;
     }
