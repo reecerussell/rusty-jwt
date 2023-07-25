@@ -16,11 +16,8 @@ public class AzureSigningKey : ISigningKey
     public HashAlgorithm HashAlgorithm { get; }
     public SigningKeyAlgorithm Algorithm { get; }
 
-    public AzureSigningKey(string keyVaultUrl, string keyName, TokenCredential credential, HashAlgorithm hashAlgorithm)
+    public AzureSigningKey(KeyVaultKey key, TokenCredential credential, HashAlgorithm hashAlgorithm)
     {
-        var keyVault = new KeyClient(new Uri(keyVaultUrl), credential);
-        var response = keyVault.GetKey(keyName)!;
-        var key = response.Value;
         _client = new CryptographyClient(key.Id, credential);
 
         Id = GenerateKeyId(key.Id.ToString());
