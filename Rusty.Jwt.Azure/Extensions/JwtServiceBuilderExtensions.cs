@@ -15,7 +15,7 @@ public static class JwtServiceBuilderExtensions
         HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256,
         SigningKeyMode mode = SigningKeyMode.SignAndVerify)
     {
-        builder.Services.AddTransient(_ =>
+        builder.Services.AddSingleton(_ =>
         {
             var credential = credentials ?? new DefaultAzureCredential();
 

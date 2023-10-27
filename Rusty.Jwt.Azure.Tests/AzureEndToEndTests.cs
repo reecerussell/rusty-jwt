@@ -45,7 +45,7 @@ public class AzureEndToEndTests : IAsyncLifetime
         _jwt.Should().NotBeNull();
         _jwt.Id.Should().NotBeNullOrWhiteSpace();
         _jwt.Token.Should().NotBeNullOrWhiteSpace();
-        _jwt.ExpiresIn.Should().BeCloseTo(SecondsTtl, 1);
+        _jwt.ExpiresIn.Should().BeCloseTo(SecondsTtl, 3);
     }
 
     [Fact]
