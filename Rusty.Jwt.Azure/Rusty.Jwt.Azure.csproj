@@ -13,6 +13,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>azure,key vault,jwt</PackageTags>
         <LangVersion>10</LangVersion>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
